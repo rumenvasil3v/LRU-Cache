@@ -5,28 +5,31 @@ import data_structures.SecureHashMap;
 import logic.LruCache;
 
 public class CacheEngine {
-	
-	public static void main(String[] args) {
-		System.out.println("Secure Cache Initialization");
-		
-		LruCache cache = new LruCache(3);
+    public static void main(String[] args) {
+        System.out.println("--- TTL Cache Simulation ---");
+        
+        LruCache sessionCache = new LruCache(5);
 
-        System.out.println("\nLoading first 3 videos into user session memory cache...");
-        cache.put("video_10", "Matrix_Trailer_1080p.mp4");
-        cache.put("video_20", "Inception_Clip_4k.mp4");
-        cache.put("video_30", "Interstellar_Teaser.mp4");
+        System.out.println("\nStoring API authorization tokens with specific TTLs...");
+        sessionCache.put("token_A", "user_alice_session_granted", 300000);
         
-        System.out.println("\nUser watches 'video_10' again...");
-        cache.get("video_10");
+        sessionCache.put("token_B", "one_time_password_used", 500);
+
+        System.out.println("\n--- Instant Query Check ---");
+        System.out.println("token_A Lookup: " + sessionCache.get("token_A"));
+        System.out.println("token_B Lookup: " + sessionCache.get("token_B"));
+
+        System.out.println("\nSimulating a 1-second background thread delay...");
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            System.out.println("Thread interrupted.");
+        }
+
+        System.out.println("\n--- Stale Query Verification Check ---");
+        System.out.println("token_A Lookup: " + (sessionCache.get("token_A") != null ? "alive" : "expired"));
         
-        System.out.println("\nUser clicks on a 4th item 'video_40'...");
-        cache.put("video_40", "Avatar_Deleted_Scene.mp4");
-        
-        System.out.println("\n--- Cache Verification Report ---");
-        System.out.println("video_40: " + (cache.get("video_40") != null ? "found" : "miss"));
-        System.out.println("video_10: " + (cache.get("video_10") != null ? "found" : "miss"));
-        System.out.println("video_30: " + (cache.get("video_30") != null ? "found" : "miss"));
-        
-        System.out.println("video_20: " + (cache.get("video_20") != null ? "found" : "evicted video"));
-	}
+        // token_B should register as an automatic cache miss because our heap clock dropped it!
+        System.out.println("token_B Lookup: " + (sessionCache.get("token_B") != null ? "alive" : "expired"));
+    }
 }
